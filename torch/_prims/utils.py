@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Union, Sequence, Optional, Tuple, List, Callable, Type
+from typing import Any, Union, Sequence, Optional, Tuple, List, Callable, Type, overload
 from enum import Enum
 from functools import reduce, cmp_to_key
 import operator
@@ -406,7 +406,17 @@ def canonicalize_dim(rank: int, idx: int) -> int:
 
 # Takes a dimension or sequence of dimensions and "wraps" them,
 # mapping negative offsets to positive ones
-def canonicalize_dims(rank: int, indices: DimsType) -> DimsType:
+@overload
+def canonicalize_dims(rank: int, indices: Sequence[int]) -> Tuple[int, ...]:
+    pass
+
+
+@overload
+def canonicalize_dims(rank: int, indices: int) -> int:
+    pass
+
+
+def canonicalize_dims(rank, indices):
     if isinstance(indices, int):
         return canonicalize_dim(rank, indices)
 
@@ -1246,7 +1256,6 @@ def suggest_memory_format(x: TensorLikeType) -> torch.memory_format:
         return torch.contiguous_format
 
     if are_strides_like_channels_last(x.shape, x.stride()):
-        return (torch.channels_last if x.ndim == 4
-                else torch.channels_last_3d)
+        return torch.channels_last if x.ndim == 4 else torch.channels_last_3d
 
     return torch.contiguous_format
